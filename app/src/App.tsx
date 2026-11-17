@@ -1,6 +1,7 @@
 // Setup check (18 Nov): proves on-device and cloud answers both work, with the
 // source label read from the SDK, before any product features are built.
 import { useEffect, useState } from 'react'
+import { InferenceSource } from 'firebase/ai'
 import { isConfigured, CLOUD_MODEL } from './firebase'
 import { getDeviceStatus, type DeviceStatus } from './ai/deviceStatus'
 import { getSenseModel, pickSense, type Mode, type SenseResult } from './ai/pickSense'
@@ -19,9 +20,11 @@ const STATUS_TEXT: Record<DeviceStatus, string> = {
   unsupported: 'This browser has no built-in AI (normal on phones). Answers will come from the cloud.',
 }
 
+// A badge alone doesn't prove Gemini Nano ran: stub or non-Gemini browser models also
+// report on-device. The setup check therefore also requires correct known answers.
 function Badge({ source }: { source: SenseResult['source'] }) {
-  if (source === 'on_device') return <span className="badge device">On this device</span>
-  if (source === 'in_cloud') return <span className="badge cloud">Google cloud</span>
+  if (source === InferenceSource.ON_DEVICE) return <span className="badge device">On this device</span>
+  if (source === InferenceSource.IN_CLOUD) return <span className="badge cloud">Google cloud</span>
   return <span className="badge unknown">Source not reported</span>
 }
 
