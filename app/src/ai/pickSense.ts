@@ -1,16 +1,14 @@
 // Ask the model which dictionary sense fits a sentence.
 // The model may only answer with a letter (or NONE), so it can choose but never invent.
-import { getGenerativeModel, InferenceMode, type GenerativeModel, type InferenceSource } from 'firebase/ai'
+import { getGenerativeModel, InferenceMode, Schema, type GenerativeModel, type InferenceSource } from 'firebase/ai'
 import { firebase, CLOUD_MODEL } from '../firebase'
 
 export const CHOICES = ['A', 'B', 'C', 'D', 'NONE'] as const
 export type Choice = (typeof CHOICES)[number]
 
-const choiceSchema = {
-  type: 'object',
-  properties: { choice: { type: 'string', enum: [...CHOICES] } },
-  required: ['choice'],
-}
+// Documented hybrid enum pattern: text/x.enum + responseSchema in the cloud,
+// the same schema as responseConstraint on-device.
+const choiceSchema = Schema.enumString({ enum: [...CHOICES] })
 
 const SYSTEM = `You help a reader understand one word in a sentence.
 You are given the sentence, the word, and up to four numbered dictionary meanings labelled A to D.
@@ -31,10 +29,13 @@ export function getSenseModel(mode: Mode): GenerativeModel {
       : InferenceMode.ONLY_IN_CLOUD,
     inCloudParams: {
       model: CLOUD_MODEL,
-      systemInstruction: SYSTEM,
-      generationConfig: { responseMimeType: 'application/json', responseJsonSchema: choiceSchema, temperature: 0 },
+      generationConfig: { responseMimeType: 'text/x.enum', responseSchema: choiceSchema, temperature: 0 },
     },
     onDeviceParams: {
+      createOptions: {
+        expectedInputs: [{ type: 'text', languages: ['en'] }],
+        expectedOutputs: [{ type: 'text', languages: ['en'] }],
+      },
       promptOptions: { responseConstraint: choiceSchema },
     },
   })
@@ -56,7 +57,7 @@ export async function pickSense(
 ): Promise<SenseResult> {
   if (senses.length < 1 || senses.length > 4) throw new Error('Give between 1 and 4 senses.')
   const options = senses.map((s, i) => `${CHOICES[i]}: ${s}`).join('\n')
-  // The on-device model has no separate system instruction here, so repeat it in the prompt.
+  // Instructions go in the prompt so on-device and cloud get exactly the same input.
   const prompt = `${SYSTEM}\n\nSentence: """${sentence.slice(0, 600)}"""\nWord: ${word}\nMeanings:\n${options}`
   const t0 = performance.now()
   const result = await getSenseModel(mode).generateContent(prompt)
@@ -65,12 +66,8 @@ export async function pickSense(
 }
 
 function parseChoice(text: string, n: number): Choice {
-  let raw: unknown
-  try {
-    raw = (JSON.parse(text) as { choice?: unknown }).choice
-  } catch {
-    raw = text.trim().replace(/[^A-Z]/gi, '').toUpperCase()
-  }
+  // Enum output is the bare value; on-device it may arrive JSON-quoted ("A").
+  const raw = text.trim().replace(/^"|"$/g, '').toUpperCase()
   const allowed: readonly string[] = [...CHOICES.slice(0, n), 'NONE']
-  return typeof raw === 'string' && allowed.includes(raw) ? (raw as Choice) : 'NONE'
+  return allowed.includes(raw) ? (raw as Choice) : 'NONE'
 }
