@@ -19,6 +19,19 @@ The brief holds up. Most of its factual claims check out, and its core warnings 
 
 Both tracks share one core: the dictionary schema, the review scheduler and the highlight renderer. Track B is **not** a hackathon entry, because the hackathon requires Firebase AI Logic hybrid inference, and both Google cloud backends bar child-directed apps (section 3.2).
 
+### Decision (17 Nov 2026): product roadmap
+
+This replaces the Track A / Track B table above.
+
+| Order | Platform | Delivered as | AI |
+|---|---|---|---|
+| 1 (hackathon, by 30 Nov) | Windows and Mac laptops | Chrome extension | Gemini Nano in Chrome; online Gemini for "Explain this paragraph" |
+| 2 (after the extension is done) | Android phones | One Android app, sharing the extension's word lists, review logic and prompts | Gemini Nano on supported flagship phones; online Gemini on every other phone, selected automatically by Firebase AI Logic |
+| Later | iPhone | App | Online Gemini only (no Gemini Nano on iOS) |
+| Later | Children | Reading app with no AI | None |
+
+Phones use Gemini through Firebase AI Logic and the developer pays for it. Ladder cannot use the Gemini app installed on a user's phone. Add per-user daily limits or a paid tier before the Android app goes public.
+
 ## 2. What I could and could not check
 
 From this session, web search worked, and `cloud.google.com` could be fetched directly. Direct fetches of `devpost.com`, `ai.google.dev`, `firebase.google.com`, `developer.chrome.com` and `support.google.com` were blocked by the session's network policy. For those sites I checked claims through search results that quote the pages, not by reading the pages myself. Where that leaves a claim unconfirmed, the table says so. **You should read the official hackathon rules page yourself before submitting.** It is the one source I could not read in any form.
