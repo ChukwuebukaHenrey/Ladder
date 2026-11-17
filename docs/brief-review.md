@@ -1,5 +1,7 @@
 # Ladder brief: fact-check and implementation-ready decisions
 
+> **Superseded:** the current plan is `docs/LADDER_BRIEF.md` (v3). This file is kept as the fact-check record.
+
 Review date: 17 November 2026. Reviewed document: *Ladder: Evidence-Led Investigation and Build Verdict* (17 Nov 2026, including the section 11 update).
 
 ## 1. Bottom line
